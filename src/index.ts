@@ -1,9 +1,9 @@
 import express from 'express'
 import cors from 'cors'
-import { proofsQueue, startWorker } from './queue'
-import { supabaseAdmin } from './services/supabase'
-import { signedUrl } from './services/storage'
-import { renderSingle, listMockups } from './services/dynamicMockups'
+import { proofsQueue, startWorker } from './queue.js'
+import { supabaseAdmin } from './services/supabase.js'
+import { signedUrl } from './services/storage.js'
+import { renderSingle, listMockups } from './services/dynamicMockups.js'
 
 const app = express()
 const PORT = Number(process.env.PORT || 4001)

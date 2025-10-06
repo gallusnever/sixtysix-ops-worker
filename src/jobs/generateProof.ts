@@ -1,9 +1,9 @@
 import { Job } from 'bullmq'
-import { ProofJob } from '../types'
-import { supabaseAdmin } from '../services/supabase'
-import { renderProofPdf } from '../services/renderer'
-import { uploadBuffer, signedUrl } from '../services/storage'
-import { renderSingle } from '../services/dynamicMockups'
+import { ProofJob } from '../types.js'
+import { supabaseAdmin } from '../services/supabase.js'
+import { renderProofPdf } from '../services/renderer.js'
+import { uploadBuffer, signedUrl } from '../services/storage.js'
+import { renderSingle } from '../services/dynamicMockups.js'
 import crypto from 'node:crypto'
 
 /**

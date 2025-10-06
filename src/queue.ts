@@ -1,7 +1,7 @@
 import { Queue, Worker } from 'bullmq'
 import IORedis from 'ioredis'
-import { generateProof } from './jobs/generateProof'
-import { ProofJob } from './types'
+import { generateProof } from './jobs/generateProof.js'
+import { ProofJob } from './types.js'
 
 const connection = new IORedis(process.env.REDIS_URL!, {
   maxRetriesPerRequest: null

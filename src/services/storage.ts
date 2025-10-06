@@ -1,4 +1,4 @@
-import { supabaseAdmin } from './supabase'
+import { supabaseAdmin } from './supabase.js'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import crypto from 'node:crypto'
