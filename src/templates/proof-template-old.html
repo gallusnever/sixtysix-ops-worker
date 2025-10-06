@@ -1,0 +1,354 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Artwork Proof - {{order.job_name}}</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Arial', 'Helvetica', sans-serif;
+      background: white;
+      color: #000;
+    }
+    .watermark {
+      position: fixed; inset: 0;
+      display: grid; place-items: center;
+      opacity: 0.05; font-size: 120px; color: #999;
+      transform: rotate(-25deg);
+      pointer-events: none;
+      font-weight: bold;
+      z-index: 1000;
+    }
+
+    /* Header */
+    .header {
+      background: #000;
+      color: white;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 4px solid #d4af37;
+    }
+    .logo-section {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+    .logo {
+      height: 60px;
+      width: auto;
+    }
+    .title-section h1 {
+      font-size: 28px;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+    .title-section p {
+      font-size: 11px;
+      color: #ccc;
+    }
+
+    /* Customer Info Box */
+    .info-box {
+      background: #e8e8e8;
+      border: 2px solid #000;
+      padding: 12px 16px;
+      margin: 0;
+    }
+    .info-row {
+      display: flex;
+      margin-bottom: 4px;
+    }
+    .info-row:last-child {
+      margin-bottom: 0;
+    }
+    .info-label {
+      font-weight: bold;
+      min-width: 80px;
+      font-size: 13px;
+    }
+    .info-value {
+      font-size: 13px;
+      font-weight: bold;
+    }
+    .due-date-red {
+      color: #ff0000;
+      font-weight: bold;
+    }
+    .due-note {
+      font-size: 9px;
+      color: #666;
+    }
+
+    /* Production Notes */
+    .production-notes {
+      text-align: center;
+      font-weight: bold;
+      font-size: 11px;
+      padding: 8px;
+      background: white;
+      border-bottom: 1px solid #ccc;
+    }
+
+    /* Page breaks */
+    .page-break-avoid {
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+    .page-break-after {
+      page-break-after: always;
+      break-after: always;
+    }
+
+    /* Artwork Section */
+    .artwork-section {
+      padding: 16px 24px;
+    }
+    .artwork-label {
+      text-align: center;
+      font-weight: bold;
+      font-size: 11px;
+      margin-bottom: 8px;
+    }
+    .artwork-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+    .artwork-item {
+      border: 2px solid #000;
+      padding: 16px;
+      background: white;
+      text-align: center;
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+    .artwork-item img {
+      max-width: 100%;
+      max-height: 400px;
+      object-fit: contain;
+      margin: 16px auto;
+      display: block;
+    }
+    .placement-label {
+      font-weight: bold;
+      font-size: 12px;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+
+    /* Approval Checkbox */
+    .approval-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 10px;
+      font-weight: bold;
+      margin-top: 12px;
+      justify-content: center;
+    }
+    .checkbox {
+      width: 16px;
+      height: 16px;
+      border: 2px solid #000;
+      display: inline-block;
+    }
+
+    /* Warning Text */
+    .warning-text {
+      text-align: center;
+      color: #ff0000;
+      font-weight: bold;
+      font-size: 10px;
+      padding: 12px;
+      line-height: 1.4;
+      background: white;
+    }
+
+    /* Job Info Section */
+    .job-info-section {
+      padding: 0 24px 24px 24px;
+    }
+    .job-info-header {
+      background: #666;
+      color: white;
+      padding: 8px 12px;
+      font-weight: bold;
+      font-size: 13px;
+    }
+    .job-info-grid {
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      border: 2px solid #000;
+      border-top: none;
+    }
+    .job-info-left {
+      background: #e8e8e8;
+      padding: 12px;
+      border-right: 2px solid #000;
+    }
+    .job-detail-row {
+      display: flex;
+      margin-bottom: 8px;
+      font-size: 11px;
+    }
+    .job-detail-label {
+      font-weight: bold;
+      min-width: 100px;
+    }
+
+    /* Artwork Details */
+    .artwork-details {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 16px;
+      padding: 16px;
+    }
+    .artwork-detail-box {
+      border: 2px solid #000;
+    }
+    .artwork-detail-header {
+      background: #e8e8e8;
+      padding: 8px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 12px;
+      border-bottom: 2px solid #000;
+    }
+    .artwork-detail-content {
+      padding: 12px;
+    }
+    .detail-item {
+      display: flex;
+      margin-bottom: 6px;
+      font-size: 11px;
+    }
+    .detail-label {
+      font-weight: bold;
+      min-width: 120px;
+    }
+    .color-list {
+      margin-top: 8px;
+    }
+    .color-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+      font-size: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="watermark">{{watermark}}</div>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="logo-section">
+      <img src="https://raw.githubusercontent.com/yourusername/assets/main/66-apparel-logo.png" alt="66 Apparel" class="logo" onerror="this.style.display='none'">
+      <div class="title-section">
+        <h1>Artwork Proof</h1>
+        <p>For questions/revisions text us at 918-944-6499</p>
+      </div>
+    </div>
+    <div class="info-box">
+      <div class="info-row">
+        <span class="info-label">Customer:</span>
+        <span class="info-value">{{customer.name}} {{#customer.phone}}{{customer.phone}}{{/customer.phone}}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Job:</span>
+        <span class="info-value">{{order.job_name}}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Version:</span>
+        <span class="info-value">V{{version}}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Due Date:</span>
+        <span class="info-value due-date-red">{{order.due_date}}</span>
+      </div>
+      <div class="due-note">THIS DATE BY END OF BUSINESS DAY</div>
+    </div>
+  </div>
+
+  <!-- Production Notes -->
+  <div class="production-notes">PRODUCTION NOTES:</div>
+
+  <!-- Artwork Display -->
+  <div class="artwork-section">
+    <div class="artwork-grid">
+      {{#files}}
+      <div class="artwork-item">
+        <div class="artwork-label">ENLARGED FOR VIEWING</div>
+        <div class="placement-label">{{placement}}{{^placement}}ARTWORK{{/placement}}</div>
+        <img src="{{url}}" alt="{{filename}}">
+        <div class="approval-box">
+          <span class="checkbox"></span>
+          <span>APPROVED LOGO WILL NEED DIGITIZED</span>
+        </div>
+        <div class="approval-box">
+          <span class="checkbox"></span>
+          <span>FILLED BOX=YES</span>
+        </div>
+      </div>
+      {{/files}}
+    </div>
+  </div>
+
+  <!-- Warning Text -->
+  <div class="warning-text">
+    SIZE/PLACEMENT ON MOCKUPS ARE AN APPROXIMATION ONLY AND FINAL PRODUCT MAY VARY.<br>
+    PLEASE NOTE: A DESIGN FEE MAY APPLY IF ARTWORK IS NOT USED IN AN ORDER.
+  </div>
+
+  <!-- Job Info -->
+  <div class="job-info-section">
+    <div class="job-info-header">JOB INFO:</div>
+    <div class="job-info-grid">
+      <div class="job-info-left">
+        <div class="job-detail-row">
+          <span class="job-detail-label">GARMENT:</span>
+          <span>{{order.garment_type}}</span>
+        </div>
+        <div class="job-detail-row">
+          <span class="job-detail-label">COLOR:</span>
+          <span>{{order.garment_color}}</span>
+        </div>
+        <div class="job-detail-row">
+          <span class="job-detail-label">NOTES:</span>
+          <span>{{order.notes}}</span>
+        </div>
+      </div>
+      <div class="artwork-details">
+        {{#files}}
+        <div class="artwork-detail-box">
+          <div class="artwork-detail-header">{{placement}}{{^placement}}ARTWORK{{/placement}}</div>
+          <div class="artwork-detail-content">
+            <div class="detail-item">
+              <span class="detail-label">LOCATION:</span>
+              <span>{{placement}}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">SIZE:</span>
+              <span>N/A</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">IMPRINT COLORS</span>
+            </div>
+            <div class="color-list">
+              <div class="color-item">
+                <span class="checkbox"></span>
+                <span>{{order.job_type}} PRINT</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        {{/files}}
+      </div>
+    </div>
+  </div>
+</body>
+</html>
