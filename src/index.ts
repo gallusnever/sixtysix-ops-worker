@@ -1,5 +1,6 @@
 import express from 'express'
 import cors from 'cors'
+import sharp from 'sharp'
 import { proofsQueue, startWorker } from './queue.js'
 import { supabaseAdmin } from './services/supabase.js'
 import { signedUrl } from './services/storage.js'
@@ -18,14 +19,19 @@ app.use(express.json())
 const requireAuth = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
   const token = req.headers.authorization?.replace('Bearer ', '')
   if (!token) {
+    console.log('[Auth] No authorization token provided')
     return res.status(401).json({ error: 'No authorization token' })
   }
 
+  console.log('[Auth] Validating token:', token.substring(0, 20) + '...')
   const { data: { user }, error } = await supabaseAdmin.auth.getUser(token)
   if (error || !user) {
-    return res.status(401).json({ error: 'Invalid token' })
+    console.error('[Auth] Token validation failed:', error?.message || 'No user found')
+    console.error('[Auth] Full error:', JSON.stringify(error, null, 2))
+    return res.status(401).json({ error: 'Invalid token', details: error?.message })
   }
 
+  console.log('[Auth] Token valid for user:', user.id)
   ;(req as any).user = user
   next()
 }
@@ -33,6 +39,38 @@ const requireAuth = async (req: express.Request, res: express.Response, next: ex
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() })
+})
+
+// Debug auth endpoint
+app.get('/api/debug/auth', async (req, res) => {
+  const token = req.headers.authorization?.replace('Bearer ', '')
+  if (!token) {
+    return res.json({
+      error: 'No token provided',
+      hasAuthHeader: !!req.headers.authorization,
+      authHeader: req.headers.authorization?.substring(0, 20) + '...'
+    })
+  }
+
+  console.log('[Debug] Token received:', token.substring(0, 20) + '...')
+
+  try {
+    const { data: { user }, error } = await supabaseAdmin.auth.getUser(token)
+    res.json({
+      success: !error,
+      hasUser: !!user,
+      userId: user?.id,
+      error: error?.message,
+      tokenLength: token.length,
+      tokenStart: token.substring(0, 20) + '...'
+    })
+  } catch (err: any) {
+    res.json({
+      error: 'Exception occurred',
+      message: err.message,
+      tokenLength: token.length
+    })
+  }
 })
 
 // Generate proof
@@ -182,12 +220,48 @@ app.post('/api/mockups/generate', requireAuth, async (req, res) => {
 
     if (signError) throw signError
 
+    let artworkUrl = signedData.signedUrl
+
+    // Convert SVG to PNG if needed (Dynamic Mockups doesn't support SVG)
+    if (designFile.mime_type === 'image/svg+xml' || designFile.filename.toLowerCase().endsWith('.svg')) {
+      console.log('[Mockup Generate] Converting SVG to PNG...')
+
+      // Download SVG
+      const svgResponse = await fetch(signedData.signedUrl)
+      if (!svgResponse.ok) throw new Error('Failed to download SVG')
+      const svgBuffer = Buffer.from(await svgResponse.arrayBuffer())
+
+      // Convert to PNG with transparent background
+      const pngBuffer = await sharp(svgBuffer)
+        .resize(4000, 4000, { fit: 'inside', withoutEnlargement: true })
+        .png({ quality: 100 })
+        .toBuffer()
+
+      // Upload converted PNG temporarily
+      const tempPngPath = `temp/${Date.now()}-converted.png`
+      const { error: uploadError } = await supabaseAdmin.storage
+        .from(process.env.BUCKET_DESIGN!)
+        .upload(tempPngPath, pngBuffer, { contentType: 'image/png' })
+
+      if (uploadError) throw uploadError
+
+      // Create signed URL for converted PNG
+      const { data: pngSignedData, error: pngSignError } = await supabaseAdmin.storage
+        .from(process.env.BUCKET_DESIGN!)
+        .createSignedUrl(tempPngPath, 3600)
+
+      if (pngSignError) throw pngSignError
+      artworkUrl = pngSignedData.signedUrl
+
+      console.log('[Mockup Generate] SVG converted to PNG')
+    }
+
     // Render mockup via Dynamic Mockups
     console.log('[Mockup Generate] Rendering mockup...')
     const { url: exportUrl } = await renderSingle({
       mockup_uuid,
       smart_object_uuid,
-      assetUrl: signedData.signedUrl,
+      assetUrl: artworkUrl,
       export_label: `${customer_id || 'customer'}-${design_file_id}`
     })
 
